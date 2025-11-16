@@ -6,3 +6,5 @@ authors = ["Runge"]
 license = "MIT"
 description = "Introspect fonts."
 categories = ["text"]
+compiler = "0.14.0"
+repository = "https://github.com/RungeCC/melt"
