@@ -5,8 +5,6 @@ def "main build" [] {
 }
 
 def "main publish" [version?: string, --build (-b)] {
-let self = "melt"
-let fork =  $"typst-packages-($self)-($version)"
 
 let cwd = (pwd)
 let package_dir = $"($cwd)/typst_package"
@@ -14,6 +12,8 @@ let package_dir = $"($cwd)/typst_package"
 let version = if $version == null {
   (open $"($package_dir)/typst.toml").package.version
 }
+let self = "melt"
+let fork =  $"typst-packages-($self)-($version)"
 
 if $build {
   main build
@@ -22,7 +22,7 @@ if $build {
 print $"Current version: ($version)"
 
 cd (mktemp -d)
-gh repo fork https://github.com/typst/packages --clone --fork-name $fork
+gh repo fork https://github.com/typst/packages --clone --fork-name $fork -- --depth 1 --single-branch
 cd $fork
 
 let dir = $"($self)/($version)"
