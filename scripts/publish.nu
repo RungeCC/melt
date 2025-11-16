@@ -36,7 +36,9 @@ if $local_typst_packages == null {
 print $"Typst packages: (pwd)"
 
 let branch = $"($self)-($version)"
-let dir = $"($self)/($version)"
+let dir = $"packages/preview/($self)/($version)"
+
+print $dir
 
 git branch $branch
 git checkout $branch
@@ -44,7 +46,13 @@ mkdir $dir
 cp -r ($"($package_dir)/*" | into glob) $dir
 git add $dir
 git commit -m $"($self):($version)"
-git push --set-upstream origin $branch
+print "input YES to push"
+
+if (input) == "YES" {
+  git push --force --set-upstream origin $branch
+} else {
+  print "Cancelled"
+}
 
 cd $cwd
 }
