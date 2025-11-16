@@ -94,7 +94,7 @@ Parses a font file (or a font collection) and returns an array of dictionaries, 
 A convenience function to get information about a single font. It is especially useful for font files that contain only one font.
 
 - `data`: `bytes` — The raw data of the font file.
-- `index`: `integer` (optional, default: `0`) — The index of the font to inspect in a font collection.
+- `index`: `int` (optional, default: `0`) — The index of the font to inspect in a font collection.
 - **Returns**: `dictionary` containing the font information with the following keys:
     - `properties`: A dictionary with the font's names, scripts, and features.
         - `names`: Contains various name strings from the font's `name` table (e.g., `family`, `full-name`, `postscript-name`). _Note: These may differ from what Typst uses. See `typst.family` for the name recognized by Typst._ All possible entries (would be `none` if not existing in ttf `name` table):
@@ -107,7 +107,7 @@ A convenience function to get information about a single font. It is especially 
           - `typographic_family`
           - `typographic_subfamily`
           - `designer`
-  copyright: Option<FontName>,
+          - `copyright`
         - `scripts`: A list of supported script and language tags from the font's `GSUB` and `GPOS` tables.
           _Note: This might not be the list of the font's intended scripts and languages._
         - `features`: A list of supported OpenType feature tags.
@@ -115,16 +115,16 @@ A convenience function to get information about a single font. It is especially 
         - `units_per_em`: `integer`
         - `italic_angle`: `float` (degrees)
         - All other metrics (e.g., `ascender`, `descender`, `x-height`) are in `em` units.
-    - `typst`: A dictionary containing font information as seen by Typst's engine. This mirrors the internal `FontInfo` structure, with flags converted to booleans for convenience.
-        - `coverage`: The internal representation of Unicode coverage. Use this with the `contains` function to check for character support.
+    - `typst`: A dictionary containing font information as seen by Typst's engine. This mirrors the Typst's internal `FontInfo` structure, with flags converted to booleans for convenience.
+        - `coverage`: Typst's internal representation of Unicode coverage. Use this with the `contains` function to check for character support.
 
 ### `contains`
 
 Checks if a given codepoint is present in the font's coverage data.
 
 - `parsed-data`: `dictionary` — The font information dictionary from `font-info` or `fonts-collection-info`.
-- `codepoint`: `integer` — The Unicode codepoint to check.
-- **Returns**: `boolean` indicating whether the codepoint is covered by the font.
+- `codepoint`: `int` — The Unicode codepoint to check.
+- **Returns**: `bool` indicating whether the codepoint is covered by the font.
 
 ## Known Limitations
 
