@@ -4,7 +4,11 @@ def "main build" [] {
   cp README.md typst_package\
 }
 
-def "main publish" [version?: string, --build (-b)] {
+def "main publish" [
+  version?: string,
+  --build (-b),
+  --local-typst-packages: path
+] {
 
 let cwd = (pwd)
 let package_dir = $"($cwd)/typst_package"
@@ -13,7 +17,6 @@ let version = if $version == null {
   (open $"($package_dir)/typst.toml").package.version
 }
 let self = "melt"
-let fork =  $"typst-packages-($self)-($version)"
 
 if $build {
   main build
@@ -21,17 +24,25 @@ if $build {
 
 print $"Current version: ($version)"
 
-cd (mktemp -d)
-gh repo fork https://github.com/typst/packages --clone --fork-name $fork -- --depth 1 --single-branch
-cd $fork
+if $local_typst_packages == null {
+  let tmp = (mktemp -d)
+  cd $tmp
+  gh repo fork https://github.com/typst/packages --clone --fork-name "typst-packages" -- --depth 1 --single-branch
+  cd typst-packages
+} else {
+  cd $local_typst_packages
+}
 
+let branch = $"($self)-($version)"
 let dir = $"($self)/($version)"
 
+git branch $branch
+git checkout $branch
 mkdir $dir
 cp -r $"($package_dir)/.*" $dir
 git add $dir
 git commit -m $"($self):($version)"
-git push
+git push --set-upstream origin $branch
 
 cd $cwd
 }
