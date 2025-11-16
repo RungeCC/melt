@@ -1,0 +1,8 @@
+[package]
+name = "melt"
+version = "0.1.0"
+entrypoint = "lib.typ"
+authors = ["Runge"]
+license = "MIT"
+description = "Introspect fonts."
+categories = ["text"]

@@ -1,0 +1,24 @@
+[package]
+name = "melt"
+version = "0.1.0"
+edition = "2024"
+resolver = "2"
+publish = false
+
+[dependencies]
+wasm-minimal-protocol = { git = "https://github.com/astrale-sharp/wasm-minimal-protocol" }
+ttf-parser = "0.25.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_cbor = "0.11.2"
+typst-library = "0.14.0"
+cargo-lock = "11.0.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+lto = true
+strip = true
+opt-level = 3
+codegen-units = 1
+panic = "abort"
