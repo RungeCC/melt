@@ -1,7 +1,3 @@
-Of course, here is a polished version of your `README.md` with corrections and improvements for clarity and readability.
-
-***
-
 # melt
 
 **WARNING: This package is still under development. APIs are unstable and may change without notice.**

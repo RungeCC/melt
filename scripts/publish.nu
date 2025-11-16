@@ -33,13 +33,15 @@ if $local_typst_packages == null {
   cd $local_typst_packages
 }
 
+print $"Typst packages: (pwd)"
+
 let branch = $"($self)-($version)"
 let dir = $"($self)/($version)"
 
 git branch $branch
 git checkout $branch
 mkdir $dir
-cp -r $"($package_dir)/.*" $dir
+cp -r ($"($package_dir)/*" | into glob) $dir
 git add $dir
 git commit -m $"($self):($version)"
 git push --set-upstream origin $branch
