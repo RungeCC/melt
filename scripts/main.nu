@@ -10,6 +10,7 @@ def "main release" [--output: path, --yes] {
     print "Write cancelled.\n"
     exit -1
   }
+  mkdir $release_path
   cp typst_package/* $release_path -r
   cp target/wasm32-unknown-unknown/release/melt.wasm $release_path
   cp LICENSE $release_path

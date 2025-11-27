@@ -232,6 +232,26 @@ struct GlyphInfo {
 
 - Due to Typst's security model, this package cannot access system-installed fonts. You must provide the font file directly by reading it from a local path.
 
+## Build From Source
+
+Require that rust toolchain and `nushell` are installed.
+
+Clone this project:
+
+```sh
+git clone https://github.com/RungeCC/melt.git
+```
+
+cd into it, then run:
+
+```nu
+nu scripts/main.nu release --yes
+```
+
+It will release the Typst package `melt` into `release/` directory.
+
+For more details, see `scripts/main.nu`.
+
 ## TODOs
 
 - [ ] completely move from `ttf-parser` to `skrifa`.
