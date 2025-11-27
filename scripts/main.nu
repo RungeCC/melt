@@ -14,8 +14,7 @@ def "main release" [--output: path, --yes] {
   cp typst_package/* $release_path -r
   cp target/wasm32-unknown-unknown/release/melt.wasm $release_path
   cp LICENSE $release_path
-  cp README.md $release_path
-  cp CHANGELOGS.md $release_path
+  $"(open --raw README.md)\n(open --raw CHANGELOGS.md)" | save --force ($release_path | path join "README.md")
 }
 
 def "main clean" [--output: path, --cargo, --yes] {
@@ -95,4 +94,10 @@ cd $cwd
 
 def main [] {
   print "no effect, use `build` or `publish`"
+}
+
+def "main help" [] {
+  print "release  [--output path] [--yes]"
+  print "publish  [version] [--release] [--local-typst-packages path] [--yes]"
+  print "clean    [--output path] [--cargo] [--yes]"
 }
