@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize, Serializer};
 use std::fmt::{self, Display};
 
+/// Language id for Macintosh platform.
+///
+/// From: <https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6name.html>
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[repr(u16)]
 pub enum MacintoshLanguage {
@@ -126,7 +129,8 @@ pub enum MacintoshLanguage {
 }
 
 impl MacintoshLanguage {
-  pub fn name(&self) -> &'static str {
+  #[allow(clippy::too_many_lines)]
+  pub fn name(self) -> &'static str {
     match self {
       Self::English => "English",
       Self::French => "French",
@@ -262,8 +266,9 @@ impl MacintoshLanguage {
   /// [0, 95) + [128, 151)
   pub fn from_index(index: u16) -> Option<Self> {
     match index {
-      0..95 => unsafe { std::mem::transmute(index) },
-      128..151 => unsafe { std::mem::transmute(index) },
+      0..95 | 128..151 => unsafe {
+        std::mem::transmute::<u16, Option<MacintoshLanguage>>(index)
+      },
       _ => None,
     }
   }
