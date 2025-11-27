@@ -1,6 +1,3 @@
 max_width = 78
-struct_field_align_threshold = 20
-enum_discrim_align_threshold = 20
-trailing_comma = "Always"
 style_edition = "2024"
 tab_spaces = 2
