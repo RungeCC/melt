@@ -88,6 +88,11 @@ Parses a font file (or a font collection) and returns an array of dictionaries, 
 
 - `data`: `bytes` — The raw data of the font file.
 - **Returns**: `array` of font information dictionaries. See `font-info` for the structure of each dictionary.
+- It's signature could be explained as follows:
+
+```rust
+fn fonts_collection_info(data: &[u8]) -> Vec<Option<FontInfo>>
+```
 
 ### `font-info`
 
@@ -97,26 +102,80 @@ A convenience function to get information about a single font. It is especially 
 - `index`: `int` (optional, default: `0`) — The index of the font to inspect in a font collection.
 - **Returns**: `dictionary` containing the font information with the following keys:
     - `properties`: A dictionary with the font's names, scripts, and features.
-        - `names`: Contains various name strings from the font's `name` table (e.g., `family`, `full-name`, `postscript-name`). _Note: These may differ from what Typst uses. See `typst.family` for the name recognized by Typst._ All possible entries (would be `none` if not existing in ttf `name` table):
-          - `ps_name`
-          - `family`
-          - `subfamily`
-          - `version`
-          - `full_name`
-          - `unique_id`
-          - `typographic_family`
-          - `typographic_subfamily`
-          - `designer`
-          - `copyright`
+        - `names`: Contains various name strings from the font's `name` table (e.g., `family`, `full-name`, `postscript-name`). _Note: These may differ from what Typst uses. See `typst.family` for the name recognized by Typst._ All possible entries can be found [here](https://learn.microsoft.com/en-us/typography/opentype/spec/name#name-ids).
+          - Each `name` item is an array of every possible entries matching `name_id`, each entry has a `name`, a `language` and `platform_encoding` field.
         - `scripts`: A list of supported script and language tags from the font's `GSUB` and `GPOS` tables.
           _Note: This might not be the list of the font's intended scripts and languages._
+          - It also contains `supported` and `designed` fields, from font's `meta` table, may reflect the font's intended scripts and languages, see [here](https://learn.microsoft.com/en-us/typography/opentype/spec/meta#data-maps) for details.
         - `features`: A list of supported OpenType feature tags.
     - `metrics`: A dictionary with various font metrics. This mirrors Typst's internal `FontMetrics` structure.
-        - `units_per_em`: `integer`
-        - `italic_angle`: `float` (degrees)
-        - All other metrics (e.g., `ascender`, `descender`, `x-height`) are in `em` units.
+        - `units_per_em`: `int`
+        - All other `metrics` (e.g., `ascender`, `descender`, `x-height`) are in `em`.
     - `typst`: A dictionary containing font information as seen by Typst's engine. This mirrors the Typst's internal `FontInfo` structure, with flags converted to booleans for convenience.
         - `coverage`: Typst's internal representation of Unicode coverage. Use this with the `contains` function to check for character support.
+
+It's signature could be explained as follows:
+```rust
+fn font_info(
+  data: &[u8],
+  index: u32,
+) -> Option<FontInfo>
+
+struct FontInfo {
+  properties: FontProperties,
+  metrics: TypstFontMetrics,
+  typst: TypstFontInfo,
+}
+
+struct FontProperties {
+  names: FontNames,
+  scripts: FontScripts,
+  features: Set<String>,
+}
+
+struct FontNames {
+  copyright_notice: Vec<FontName>,
+  family: Vec<FontName>,
+  ... // for details, see opentype reference of `name_id`s.
+}
+
+struct FontName {
+  name: Option<String>,
+  language: Option<String>,
+  platform_encoding: PlatformEncoding,
+}
+
+struct Scripts {
+  scripts: Set<String>,
+  languages: Set<String>,
+  designed: Set<String>,
+  supported: Set<String>,
+}
+
+struct TypstFontInfo {
+  family: String,
+  variant: FontVariant,
+  coverage: Coverage,
+  is_monospace: bool,
+  is_serif: bool,
+  is_variable: bool,
+  has_math_table: bool,
+}
+
+struct TypstFontMetrics {
+  units_per_em: int,
+  ascender: f64,
+  descender: f64,
+  x_height: f64,
+  cap_height: f64,
+
+  strikethrough: LineMetrics,
+  overline: LineMetrics,
+  underline: LineMetrics,
+  subscript: Option<ScriptMetrics>,
+  superscript: Option<ScriptMetrics>,
+}
+```
 
 ### `contains`
 
@@ -126,9 +185,59 @@ Checks if a given codepoint is present in the font's coverage data.
 - `codepoint`: `int` — The Unicode codepoint to check.
 - **Returns**: `bool` indicating whether the codepoint is covered by the font.
 
+It's signature could be explained as follows:
+```rust
+fn contains(
+  data: &[u8],
+  index: u32,
+  codepoint: char,
+) -> bool
+```
+
+### `glyphes-infos`
+
+`glyphes_info` provides detailed glyph information including (all `metrics` are in font `unit`, relation between `em` and `unit` is through `metrics.units_per_em`)
+  - Glyph ID
+  - name
+  - `metric`: Bounding box
+  - `metric`: Horizontal and vertical advances
+  - `metric`: Side bearings
+  - `metric`: Phantom points
+  - Color glyph detection
+
+
+It's signature could be explained as follows:
+
+```rust
+fn glyphes_infos(
+  data: &[u8],
+  index: u32,
+) -> Vec<Option<GlyphInfo>>
+
+struct GlyphInfo {
+  id: u16,
+  name: Option<String>,
+  bbox: Option<BBox<i16>>,
+  phantom_points: Option<PhantomPoints<f32>>,
+  y_origin: Option<i16>,
+  vertical_advance: Option<u16>,
+  horizontal_advance: Option<u16>,
+  vertical_side_bearing: Option<i16>,
+  horizontal_side_bearing: Option<i16>,
+  is_color: bool,
+}
+```
+
 ## Known Limitations
 
 - Due to Typst's security model, this package cannot access system-installed fonts. You must provide the font file directly by reading it from a local path.
+
+## TODOs
+
+- [ ] completely move from `ttf-parser` to `skrifa`.
+- [ ] support `glyphes-shapes` function.
+- [ ] doc.rs
+- [ ] Typst documentation.
 
 ## License
 

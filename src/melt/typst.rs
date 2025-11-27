@@ -3,6 +3,7 @@ use super::repr::FontRepr;
 use serde::{Deserialize, Serialize};
 use typst_library::text::{self, Coverage, FontFlags, FontVariant};
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct TypstFontInfo {
   family: String,
@@ -22,7 +23,7 @@ impl TypstFontInfo {
 
     Self {
       family: info.family.clone(),
-      variant: info.variant.clone(),
+      variant: info.variant,
       coverage: info.coverage.clone(),
       is_monospace: contains_flag(FontFlags::MONOSPACE),
       is_serif: contains_flag(FontFlags::SERIF),
@@ -31,11 +32,13 @@ impl TypstFontInfo {
     }
   }
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct LineMetrics {
   position: f64,
   thickness: f64,
 }
+
 impl LineMetrics {
   fn from_typst_metrics(metrics: &text::LineMetrics) -> Self {
     Self {
@@ -44,6 +47,7 @@ impl LineMetrics {
     }
   }
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct ScriptMetrics {
   width: f64,
@@ -51,6 +55,7 @@ struct ScriptMetrics {
   horizontal_offset: f64,
   vertical_offset: f64,
 }
+
 impl ScriptMetrics {
   fn from_typst_metrics(metrics: &text::ScriptMetrics) -> Self {
     Self {
@@ -63,14 +68,13 @@ impl ScriptMetrics {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct FontMetrics {
+pub(super) struct TypstFontMetrics {
   units_per_em: f64,
   // all quantities below are in em
   ascender: f64,
   descender: f64,
   cap_height: f64,
   x_height: f64,
-  italic_angle: Option<f32>,
 
   strikethrough: LineMetrics,
   overline: LineMetrics,
@@ -79,10 +83,32 @@ pub(crate) struct FontMetrics {
   superscript: Option<ScriptMetrics>,
 }
 
-impl FontMetrics {
+impl TypstFontMetrics {
+  #[allow(dead_code)]
+  pub(super) fn ascender(&self) -> f64 {
+    self.units_per_em * self.ascender
+  }
+
+  #[allow(dead_code)]
+  pub(super) fn descender(&self) -> f64 {
+    self.units_per_em * self.descender
+  }
+
+  #[allow(dead_code)]
+  pub(super) fn cap_height(&self) -> f64 {
+    self.units_per_em * self.cap_height
+  }
+
+  #[allow(dead_code)]
+  pub(super) fn x_height(&self) -> f64 {
+    self.units_per_em * self.x_height
+  }
+}
+
+impl TypstFontMetrics {
   pub(crate) fn from_repr(repr: &FontRepr) -> Self {
     let typst_metrics = &repr.metrics;
-    FontMetrics {
+    TypstFontMetrics {
       units_per_em: typst_metrics.units_per_em,
       ascender: typst_metrics.ascender.get(),
       descender: typst_metrics.descender.get(),
@@ -99,7 +125,6 @@ impl FontMetrics {
       superscript: typst_metrics
         .superscript
         .map(|sup| ScriptMetrics::from_typst_metrics(&sup)),
-      italic_angle: repr.ttf.tables().post.map(|post| post.italic_angle),
     }
   }
 }

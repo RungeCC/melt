@@ -4,10 +4,12 @@ mod typst;
 
 use repr::FontRepr;
 use serde::{Deserialize, Serialize};
-use ttf_parser;
 
-use ttf::{FontFeatures, FontNames, FontScripts};
-use typst::{FontMetrics, TypstFontInfo};
+use ttf::features::FontFeatures;
+use ttf::glyphes::{GlyphInfos, GlyphShapes};
+use ttf::names::FontNames;
+use ttf::scripts::FontScripts;
+use typst::{TypstFontInfo, TypstFontMetrics};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct FontProperties {
@@ -15,6 +17,7 @@ struct FontProperties {
   scripts: FontScripts,
   features: FontFeatures,
 }
+
 impl FontProperties {
   fn from_repr(repr: &FontRepr) -> Self {
     FontProperties {
@@ -24,10 +27,11 @@ impl FontProperties {
     }
   }
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FontInfo {
   properties: FontProperties,
-  metrics: FontMetrics,
+  metrics: TypstFontMetrics,
   typst: TypstFontInfo,
 }
 
@@ -36,7 +40,7 @@ impl FontInfo {
     let repr = FontRepr::new(data, index)?;
     Some(FontInfo {
       properties: FontProperties::from_repr(&repr),
-      metrics: FontMetrics::from_repr(&repr),
+      metrics: TypstFontMetrics::from_repr(&repr),
       typst: TypstFontInfo::from_repr(&repr),
     })
   }
@@ -45,4 +49,22 @@ impl FontInfo {
     let counts = ttf_parser::fonts_in_collection(data).unwrap_or(1);
     (0..counts).map(move |id| FontInfo::new(data, id))
   }
+}
+
+pub fn glyphes_infos(
+  data: &[u8],
+  index: u32,
+  codes: impl Iterator<Item = Option<char>>,
+) -> Option<GlyphInfos> {
+  let repr = FontRepr::new(data, index)?;
+  Some(GlyphInfos::from_option_iter(&repr, codes))
+}
+
+pub fn glyph_shapes_info(
+  data: &[u8],
+  index: u32,
+  codes: impl Iterator<Item = Option<char>>,
+) -> Option<GlyphShapes> {
+  let repr = FontRepr::new(data, index)?;
+  Some(GlyphShapes::from_option_iter(&repr, codes))
 }
