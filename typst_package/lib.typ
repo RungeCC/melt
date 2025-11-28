@@ -35,7 +35,7 @@
 
 #let glyphes-infos(data, index, codepoints) = {
   assert(
-    type(index) == int and 0 <= index and index < calc.pow(2, 32) - 1,
+    type(index) == int and 0 <= index and index < 0xFFFFFFFF,
     message: "index must be an integer between 0 and 2^32 - 1",
   )
   assert(
