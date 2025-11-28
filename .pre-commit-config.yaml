@@ -5,3 +5,7 @@ repos:
       - id: fmt
       - id: cargo-check
       - id: clippy
+  - repo: https://github.com/typstyle-rs/pre-commit-typstyle
+    rev: v0.14.0
+    hooks:
+      - id: typstyle
