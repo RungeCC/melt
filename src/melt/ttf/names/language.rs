@@ -1,11 +1,13 @@
-use serde::{Deserialize, Serialize, Serializer};
+use serde::de::{Error, Visitor};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::{self, Display};
 
 /// Language id for Macintosh platform.
 ///
 /// From: <https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6name.html>
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[repr(u16)]
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MacintoshLanguage {
   English = 0,
   French = 1,
@@ -266,9 +268,9 @@ impl MacintoshLanguage {
   /// [0, 95) + [128, 151)
   pub fn from_index(index: u16) -> Option<Self> {
     match index {
-      0..95 | 128..151 => unsafe {
-        std::mem::transmute::<u16, Option<MacintoshLanguage>>(index)
-      },
+      0..95 | 128..151 => {
+        Some(unsafe { std::mem::transmute::<u16, MacintoshLanguage>(index) })
+      }
       _ => None,
     }
   }
@@ -280,5 +282,33 @@ impl Serialize for MacintoshLanguage {
     S: Serializer,
   {
     serializer.serialize_str(self.name())
+  }
+}
+
+struct MacintoshLanguageVisitor;
+
+impl Visitor<'_> for MacintoshLanguageVisitor {
+  type Value = MacintoshLanguage;
+
+  fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    formatter.write_str("a valid Macintosh Language ID (u16)")
+  }
+
+  fn visit_u16<E>(self, value: u16) -> Result<Self::Value, E>
+  where
+    E: Error,
+  {
+    MacintoshLanguage::from_index(value).ok_or_else(|| {
+      E::custom(format!("Unknown MacintoshLanguage ID: {value}"))
+    })
+  }
+}
+
+impl<'de> Deserialize<'de> for MacintoshLanguage {
+  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    deserializer.deserialize_u16(MacintoshLanguageVisitor)
   }
 }

@@ -1,4 +1,6 @@
-use serde::{Deserialize, Serialize, Serializer};
+use serde::de::{Error, Visitor};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::fmt;
 use ttf_parser::PlatformId;
 
 /// OpenType platform and encoding.
@@ -83,7 +85,8 @@ impl Serialize for UnicodeEncoding {
 }
 
 #[repr(u16)]
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, Serialize)]
 pub(super) enum MacintoshEncoding {
   Roman = 0,
   Japanese = 1,
@@ -128,6 +131,32 @@ impl MacintoshEncoding {
       },
       _ => MacintoshEncoding::Uninterpreted,
     }
+  }
+}
+
+struct MacintoshEncodingVisitor;
+
+impl Visitor<'_> for MacintoshEncodingVisitor {
+  type Value = MacintoshEncoding;
+
+  fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    formatter.write_str("a valid Macintosh Language ID (u16)")
+  }
+
+  fn visit_u16<E>(self, value: u16) -> Result<Self::Value, E>
+  where
+    E: Error,
+  {
+    Ok(MacintoshEncoding::from_index(value))
+  }
+}
+
+impl<'de> Deserialize<'de> for MacintoshEncoding {
+  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    deserializer.deserialize_u16(MacintoshEncodingVisitor)
   }
 }
 
