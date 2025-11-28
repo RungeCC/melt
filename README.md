@@ -211,7 +211,7 @@ fn contains(
 
 ### `glyphes-infos`
 
-`glyphes_info` provides detailed glyph information including (all `metrics` are in font `unit`, relation between `em` and `unit` is through `metrics.units_per_em`)
+`glyphes_info` provides detailed glyph information including (all `metrics` are in font `unit`, relation between `em` and `unit` is through `typst.metrics.units_per_em`)
   - Glyph ID
   - name
   - `metric`: Bounding box
@@ -269,10 +269,13 @@ For more details, see `scripts/main.nu`.
 
 ## TODOs
 
-- [ ] completely move from `ttf-parser` to `skrifa`.
-- [ ] support `glyphes-shapes` function.
+- [ ] Completely move from `ttf-parser` to `skrifa`.
+- [ ] Support `glyphes-shapes` function.
 - [ ] doc.rs
 - [ ] Typst documentation.
+- [ ] Complete mod `metrics`, support more entries
+- [ ] Bundle some fonts, especially fonts that are also bundled by Typst compiler.
+- [ ] Use ICU.
 
 ## License
 
