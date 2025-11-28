@@ -40,56 +40,55 @@ def "main publish" [
   --local-typst-packages: path,
   --yes
 ] {
-
   print $"Starting publish.\n"
   if not $yes and (input "Type YES to continue: ") != "YES" {
     print "Cancelled.\n"
     exit -1
   }
 
-let cwd = (pwd)
-let package_dir = $"($cwd)/typst_package"
+  let cwd = (pwd)
+  let package_dir = $"($cwd)/typst_package"
 
-let version = if $version == null {
-  (open $"($package_dir)/typst.toml").package.version
-}
-let self = "melt"
+  let version = if $version == null {
+    (open $"($package_dir)/typst.toml").package.version
+  }
+  let self = "melt"
 
-if $release {
-  main release --yes=$yes
-}
+  if $release {
+    main release --yes=$yes
+  }
 
-print $"Current version: ($version)"
+  print $"Current version: ($version)"
 
-if $local_typst_packages == null {
-  let tmp = (mktemp -d)
-  cd $tmp
-  gh repo fork https://github.com/typst/packages --clone --fork-name "typst-packages" -- --depth 1 --single-branch
-  cd typst-packages
-} else {
-  cd $local_typst_packages
-}
+  if $local_typst_packages == null {
+    let tmp = (mktemp -d)
+    cd $tmp
+    gh repo fork https://github.com/typst/packages --clone --fork-name "typst-packages" -- --depth 1 --single-branch
+    cd typst-packages
+  } else {
+    cd $local_typst_packages
+  }
 
-print $"Typst packages: (pwd)"
+  print $"Typst packages: (pwd)"
 
-let branch = $"($self)-($version)"
-let dir = $"packages/preview/($self)/($version)"
+  let branch = $"($self)-($version)"
+  let dir = $"packages/preview/($self)/($version)"
 
-print $dir
+  print $dir
 
-git branch $branch
-git checkout $branch
-mkdir $dir
-cp -r ($"($package_dir)/*" | into glob) $dir
-git add $dir
-git commit -m $"($self):($version)"
+  git branch $branch
+  git checkout $branch
+  mkdir $dir
+  cp -r ($"($package_dir)/*" | into glob) $dir
+  git add $dir
+  git commit -m $"($self):($version)"
 
-if not $yes and (input "Type YES to continue: ") != "YES" {
-  print "Cancelled.\n"
-  exit -1
-}
+  if not $yes and (input "Type YES to continue: ") != "YES" {
+    print "Cancelled.\n"
+    exit -1
+  }
 
-cd $cwd
+  cd $cwd
 }
 
 def main [] {
