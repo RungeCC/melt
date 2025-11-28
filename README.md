@@ -88,7 +88,7 @@ Parses a font file (or a font collection) and returns an array of dictionaries, 
 
 - `data`: `bytes` — The raw data of the font file.
 - **Returns**: `array` of font information dictionaries. See `font-info` for the structure of each dictionary.
-- It's signature could be explained as follows:
+- Its signature could be explained as follows:
 
 ```rust
 fn fonts_collection_info(data: &[u8]) -> Vec<Option<FontInfo>>
@@ -115,7 +115,7 @@ A convenience function to get information about a single font. It is especially 
             - `coverage`: Typst's internal representation of Unicode coverage. Use this with the `contains` function to check for character support.
         - `metrics`: A dictionary containing font metrics as seen by Typst's engine. _Note: that the math metrics has not been included yet._ 
 
-It's signature could be explained as follows:
+Its signature could be explained as follows:
 ```rust
 fn font_info(
   data: &[u8],
@@ -200,7 +200,7 @@ Checks if a given codepoint is present in the font's coverage data.
 - `codepoint`: `int` — The Unicode codepoint to check.
 - **Returns**: `bool` indicating whether the codepoint is covered by the font.
 
-It's signature could be explained as follows:
+Its signature could be explained as follows:
 ```rust
 fn contains(
   data: &[u8],
@@ -221,7 +221,7 @@ fn contains(
   - Color glyph detection
 
 
-It's signature could be explained as follows:
+Its signature could be explained as follows:
 
 ```rust
 fn glyphes_infos(
