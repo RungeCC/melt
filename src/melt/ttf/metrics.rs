@@ -26,6 +26,7 @@ pub(crate) struct FontMetrics {
   pub(crate) descender: i16,
   pub(crate) line_gap: i16,
   pub(crate) height: i16,
+  pub(crate) italic_angle: f32,
 }
 
 impl FontMetrics {
@@ -37,6 +38,7 @@ impl FontMetrics {
       descender: ttf.descender(),
       line_gap: ttf.line_gap(),
       height: ttf.height(),
+      italic_angle: ttf.italic_angle(),
     }
   }
 }

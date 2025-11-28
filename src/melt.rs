@@ -7,9 +7,10 @@ use serde::{Deserialize, Serialize};
 
 use ttf::features::FontFeatures;
 use ttf::glyphes::{GlyphInfos, GlyphShapes};
+use ttf::metrics::FontMetrics;
 use ttf::names::FontNames;
 use ttf::scripts::FontScripts;
-use typst::{TypstFontInfo, TypstFontMetrics};
+use typst::TypstFontIntrospection;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct FontProperties {
@@ -31,8 +32,8 @@ impl FontProperties {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FontInfo {
   properties: FontProperties,
-  metrics: TypstFontMetrics,
-  typst: TypstFontInfo,
+  metrics: FontMetrics,
+  typst: TypstFontIntrospection,
 }
 
 impl FontInfo {
@@ -40,8 +41,8 @@ impl FontInfo {
     let repr = FontRepr::new(data, index)?;
     Some(FontInfo {
       properties: FontProperties::from_repr(&repr),
-      metrics: TypstFontMetrics::from_repr(&repr),
-      typst: TypstFontInfo::from_repr(&repr),
+      metrics: FontMetrics::from_repr(&repr),
+      typst: TypstFontIntrospection::from_repr(&repr),
     })
   }
 

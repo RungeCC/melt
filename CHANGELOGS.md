@@ -8,7 +8,9 @@
 
 #### Internal `FontInfo` Changes
 
-- `metrics` no more contains `italic_angle` field.
+- v0.1.0 `metrics` becomes `typst.metrics`, v0.1.0 `typst` becomes `typst.info`
+- new entry `metrics` of `info`
+- `typst.metrics` no more contains `italic_angle` field.
 - `properties.names` contains all possible `name_id`s, and return all possible entries with corresponding `name_id`, each entry has a `language` and `platform_encoding` field.
 - `properties.scripts` now contains `designed` and `supported` fields, as arrays of strings, from font's `meta` table.
 

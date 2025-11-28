@@ -128,3 +128,17 @@ impl TypstFontMetrics {
     }
   }
 }
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct TypstFontIntrospection {
+  info: TypstFontInfo,
+  metrics: TypstFontMetrics,
+}
+
+impl TypstFontIntrospection {
+  pub(crate) fn from_repr(repr: &FontRepr) -> Self {
+    TypstFontIntrospection {
+      info: TypstFontInfo::from_repr(repr),
+      metrics: TypstFontMetrics::from_repr(repr),
+    }
+  }
+}

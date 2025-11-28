@@ -13,7 +13,7 @@ The name "melt" is a nod to traditional metal typesetting, where font characters
 First, add the package to your project:
 
 ```typst
-#import "@preview/melt:0.1.0": *
+#import "@preview/melt:0.2.0": *
 ```
 
 Then, you can use the provided functions to inspect your font files. For example, to get information about a font:
@@ -38,7 +38,7 @@ Then, you can use the provided functions to inspect your font files. For example
 Once you have parsed the fonts used in your document, you can perform more advanced operations. This example demonstrates how to create a "fake bold" effect that adjusts its spacing based on whether the font is monospace.
 
 ```typ
-#import "@preview/melt:0.1.0": *
+#import "@preview/melt:0.2.0": *
 
 // Assume the following fonts exist in an 'assets' folder.
 #let monaco-parsed = font-info(read("assets/Monaco.ttf", encoding: none))
@@ -48,7 +48,7 @@ Once you have parsed the fonts used in your document, you can perform more advan
 #let parsed-fonts = (
   (monaco-parsed, ..sourcehansans-parsed)
     .map(
-      it => (lower(it.typst.family), it),
+      it => (lower(it.typst.info.family), it),
     )
     .to-dict()
 )
@@ -59,7 +59,7 @@ Once you have parsed the fonts used in your document, you can perform more advan
 #let fakebold(txt, stroke: 1) = {
   context {
     let font-info = parsed-fonts.at(text.font, default: none)
-    let is-mono = if font-info != none { font-info.typst.is_monospace } else { false }
+    let is-mono = if font-info != none { font-info.typst.info.is_monospace } else { false }
 
     text(
       tracking: if is-mono { 0em } else { stroke * 0.001em },
@@ -102,17 +102,18 @@ A convenience function to get information about a single font. It is especially 
 - `index`: `int` (optional, default: `0`) — The index of the font to inspect in a font collection.
 - **Returns**: `dictionary` containing the font information with the following keys:
     - `properties`: A dictionary with the font's names, scripts, and features.
-        - `names`: Contains various name strings from the font's `name` table (e.g., `family`, `full-name`, `postscript-name`). _Note: These may differ from what Typst uses. See `typst.family` for the name recognized by Typst._ All possible entries can be found [here](https://learn.microsoft.com/en-us/typography/opentype/spec/name#name-ids).
+        - `names`: Contains various name strings from the font's `name` table (e.g., `family`, `full-name`, `postscript-name`). _Note: These may differ from what Typst uses. See `typst.info.family` for the name recognized by Typst._ All possible entries can be found [here](https://learn.microsoft.com/en-us/typography/opentype/spec/name#name-ids).
           - Each `name` item is an array of every possible entries matching `name_id`, each entry has a `name`, a `language` and `platform_encoding` field.
         - `scripts`: A list of supported script and language tags from the font's `GSUB` and `GPOS` tables.
           _Note: This might not be the list of the font's intended scripts and languages._
           - It also contains `supported` and `designed` fields, from font's `meta` table, may reflect the font's intended scripts and languages, see [here](https://learn.microsoft.com/en-us/typography/opentype/spec/meta#data-maps) for details.
         - `features`: A list of supported OpenType feature tags.
-    - `metrics`: A dictionary with various font metrics. This mirrors Typst's internal `FontMetrics` structure.
-        - `units_per_em`: `int`
-        - All other `metrics` (e.g., `ascender`, `descender`, `x-height`) are in `em`.
-    - `typst`: A dictionary containing font information as seen by Typst's engine. This mirrors the Typst's internal `FontInfo` structure, with flags converted to booleans for convenience.
-        - `coverage`: Typst's internal representation of Unicode coverage. Use this with the `contains` function to check for character support.
+    - `metrics`: A dictionary with various font metrics.
+        - `italic_angle` is in degrees, all rest metrics are in font units.
+    - `typst`: A dictionary containing font information and font metrics as seen by Typst's engine. 
+        - `info`: This mirrors the Typst's internal `FontInfo` structure, with flags converted to booleans for convenience.
+            - `coverage`: Typst's internal representation of Unicode coverage. Use this with the `contains` function to check for character support.
+        - `metrics`: A dictionary containing font metrics as seen by Typst's engine. _Note: that the math metrics has not been included yet._ 
 
 It's signature could be explained as follows:
 ```rust
@@ -123,8 +124,8 @@ fn font_info(
 
 struct FontInfo {
   properties: FontProperties,
-  metrics: TypstFontMetrics,
-  typst: TypstFontInfo,
+  metrics: FontMetrics,
+  typst: TypstFontIntrospection,
 }
 
 struct FontProperties {
@@ -150,6 +151,20 @@ struct Scripts {
   languages: Set<String>,
   designed: Set<String>,
   supported: Set<String>,
+}
+
+struct FontMetrics {
+  em: u16,
+  ascender: i16,
+  descender: i16,
+  line_gap: i16,
+  height: i16,
+  italic_angle: f32,
+}
+
+struct TypstFontIntrospection {
+  info: TypstFontInfo,
+  metrics: TypstFontMetrics
 }
 
 struct TypstFontInfo {
