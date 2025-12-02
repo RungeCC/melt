@@ -38,6 +38,10 @@ def "main publish" [
   version?: string,
   --release (-r),
   --local-typst-packages: path,
+  --release-path: path,
+  --delete-branch (-d),
+  --push (-p),
+  --origin: string,
   --yes
 ] {
   print $"Starting publish.\n"
@@ -47,7 +51,12 @@ def "main publish" [
   }
 
   let cwd = (pwd)
-  let package_dir = $"($cwd)/typst_package"
+  let release_path = if $release_path == null {
+    "release/"
+  } else {
+    $release_path
+  }
+  let package_dir = echo ($cwd) | path join $release_path
 
   let version = if $version == null {
     (open $"($package_dir)/typst.toml").package.version
@@ -76,6 +85,11 @@ def "main publish" [
 
   print $dir
 
+  if not $yes and (input "Type YES to continue: ") != "YES" {
+    print "Cancelled.\n"
+    exit -1
+  }
+
   git branch $branch
   git checkout $branch
   mkdir $dir
@@ -83,9 +97,18 @@ def "main publish" [
   git add $dir
   git commit -m $"($self):($version)"
 
-  if not $yes and (input "Type YES to continue: ") != "YES" {
-    print "Cancelled.\n"
-    exit -1
+  if $push {
+    let origin = if $origin == null {
+      "origin"
+    } else {
+      $origin
+    }
+    git push --set-upstream $origin $branch
+  }
+
+  if $delete_branch {
+    git checkout main
+    git branch -D $branch
   }
 
   cd $cwd
