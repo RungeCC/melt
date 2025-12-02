@@ -15,7 +15,7 @@ mod wasm_host {
   }
 
   #[wasm_func]
-  pub fn glyphes_infos(
+  pub fn glyphs_infos(
     data: &[u8],
     index: &[u8],
     codepoints: &[u8],
@@ -29,7 +29,7 @@ mod wasm_host {
             .collect::<Vec<Option<char>>>()
         })
     {
-      to_vec(&melt::glyphes_infos(
+      to_vec(&melt::glyphs_infos(
         data,
         index,
         codepoints.clone().into_iter(),
@@ -42,11 +42,9 @@ mod wasm_host {
   }
 
   #[wasm_func]
-  #[allow(dead_code)]
-  pub fn glyphes_shapes(
+  pub fn glyphs_shapes(
     data: &[u8],
     index: &[u8],
-    styles: &[u8],
     codepoints: &[u8],
   ) -> Vec<u8> {
     if let Ok(index) = from_reader::<u32, _>(index)
@@ -58,12 +56,9 @@ mod wasm_host {
             .collect::<Vec<Option<char>>>()
         })
     {
-      let styles = from_reader::<melt::SvgPathStyles, _>(styles)
-        .unwrap_or(melt::SvgPathStyles::default());
-      to_vec(&melt::glyph_shapes(
+      to_vec(&melt::glyphs_shapes(
         data,
         index,
-        styles,
         codepoints.clone().into_iter(),
       ))
       .unwrap()

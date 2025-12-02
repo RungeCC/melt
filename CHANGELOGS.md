@@ -4,7 +4,8 @@
 
 ### Lib Side Changes
 
-- New `wasm_func`s `glyphes_infos` to retrieve glyph information for a list of Unicode codepoints.
+- New `wasm_func`s `glyphs_infos` to retrieve glyph information for a list of Unicode codepoints.
+- New `wasm_func`s `glyphs_shapes` to return a glyph shape information for a list of Unicode codepoints
 
 #### Internal `FontInfo` Changes
 
@@ -16,7 +17,9 @@
 
 ### Package Side Changes
 
-- New function `glyphes-info(data, index, codepoints)` to retrieve glyph information for a list of Unicode codepoints.
+- New function `glyphs-info(data, index, codepoints)` to retrieve glyph information for a list of Unicode codepoints.
+- New function `glyphs-shape(data, index, codepoints, styles)` for getting array SVG string of glyphs in font of given Unicode codepoints, styles will be applied to SVG path.
+- New function `svg-path-styles`, a utility function for generating dictionary of SVG path styles.
 - Now `contains` function will check if the codepoint is a valid Unicode codepoint.
 
 ### Misc

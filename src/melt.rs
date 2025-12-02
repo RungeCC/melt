@@ -6,13 +6,11 @@ use repr::FontRepr;
 use serde::{Deserialize, Serialize};
 
 use ttf::features::FontFeatures;
-use ttf::glyphes::{GlyphInfos, GlyphShapes};
+use ttf::glyphs::{GlyphsInfo, GlyphsShapes};
 use ttf::metrics::FontMetrics;
 use ttf::names::FontNames;
 use ttf::scripts::FontScripts;
 use typst::TypstFontIntrospection;
-
-pub use ttf::glyphes::SvgPathStyles;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct FontProperties {
@@ -54,21 +52,20 @@ impl FontInfo {
   }
 }
 
-pub fn glyphes_infos(
+pub fn glyphs_infos(
   data: &[u8],
   index: u32,
   codes: impl Iterator<Item = Option<char>>,
-) -> Option<GlyphInfos> {
+) -> Option<GlyphsInfo> {
   let repr = FontRepr::new(data, index)?;
-  Some(GlyphInfos::from_option_iter(&repr, codes))
+  Some(GlyphsInfo::from_option_iter(&repr, codes))
 }
 
-pub fn glyph_shapes(
+pub fn glyphs_shapes(
   data: &[u8],
   index: u32,
-  styles: SvgPathStyles,
   codes: impl Iterator<Item = Option<char>>,
-) -> Option<GlyphShapes> {
+) -> Option<GlyphsShapes> {
   let repr = FontRepr::new(data, index)?;
-  Some(GlyphShapes::from_option_iter_styled(&repr, styles, codes))
+  Some(GlyphsShapes::from_option_iter(&repr, codes))
 }

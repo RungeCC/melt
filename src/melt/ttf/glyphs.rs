@@ -138,28 +138,28 @@ impl GlyphInfo {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct GlyphInfos(Vec<Option<GlyphInfo>>);
+pub(crate) struct GlyphsInfo(Vec<Option<GlyphInfo>>);
 
-impl GlyphInfos {
+impl GlyphsInfo {
   pub(crate) fn from_option_iter(
     repr: &FontRepr,
     codes: impl Iterator<Item = Option<char>>,
   ) -> Self {
-    let glyphes = codes.map(|code| GlyphInfo::from_character(repr, code?));
-    GlyphInfos(glyphes.collect())
+    let glyphs = codes.map(|code| GlyphInfo::from_character(repr, code?));
+    GlyphsInfo(glyphs.collect())
   }
 }
 
-struct SvgPen(String);
+struct SvgBuilder(String);
 
-impl SvgPen {
+impl SvgBuilder {
   fn new() -> Self {
     Self(String::new())
   }
 }
 
 // Implement the trait to translate Font commands -> SVG commands
-impl OutlineBuilder for SvgPen {
+impl OutlineBuilder for SvgBuilder {
   fn move_to(&mut self, x: f32, y: f32) {
     write!(&mut self.0, "M {x} {y} ").unwrap();
   }
@@ -183,95 +183,76 @@ impl OutlineBuilder for SvgPen {
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Copy)]
-pub struct SvgPathStyles {
-  scaling: f32,
-}
-
-impl Default for SvgPathStyles {
-  fn default() -> Self {
-    Self { scaling: 1.0 }
-  }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub(crate) struct GlyphShapeBuilder {
-  style: SvgPathStyles,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct SvgMetrics {
+  x_origin: f32,
+  y_origin: f32,
+  width: f32,
+  height: f32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct GlyphShape {
-  // Current only SVG.
-  svg: String,
+  // A template of svg
+  template: String,
+  metrics: SvgMetrics,
 }
 
-impl GlyphShapeBuilder {
-  #[allow(dead_code)]
-  fn new(style: SvgPathStyles) -> Self {
-    Self { style }
-  }
-
-  #[allow(dead_code)]
-  fn with_style(mut self, style: SvgPathStyles) -> Self {
-    self.style = style;
-    self
-  }
-}
-
-impl GlyphShapeBuilder {
-  fn glyph_shape(
-    &self,
-    repr: &FontRepr,
-    glyph: &GlyphInfo,
-  ) -> Option<GlyphShape> {
-    let mut builder = SvgPen::new();
-    // px -> pt conversion, 1pt = 1.33px, then apply additional scaling
-    let scale = 1. / 0.75 * self.style.scaling;
+impl GlyphShape {
+  fn shape(repr: &FontRepr, glyph: &GlyphInfo) -> Option<GlyphShape> {
+    let mut builder = SvgBuilder::new();
     let ttf = &repr.ttf_parser;
     let glyph_id = glyph.id();
     let bbox = ttf.outline_glyph(glyph_id, &mut builder)?;
     let width = glyph.vertical_advance.map_or(
       f32::from(bbox.width())
         + 2.0 * f32::from(glyph.horizontal_side_bearing.unwrap_or(0)),
-      |e| f32::from(e) * scale,
-    ) * scale;
-    let height = f32::from(bbox.height()) * scale;
-    let y_origin = f32::from(-bbox.y_max) * scale;
+      f32::from,
+    );
+    let height = f32::from(bbox.height());
+    let y_origin = f32::from(-bbox.y_max);
+    let x_origin = f32::from(bbox.x_min);
     #[rustfmt::skip]
     let svg = format!(
-r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 {y_origin} {width} {height}">
-  <g transform="scale({scale}, -{scale})">
-    <path d="{path_data}" fill="black" />
+r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 {{y_origin}} {{width}} {{height}}">
+  <g transform="scale({{scale}}, -{{scale}})">
+    <path d="{path_data}" fill="{{fill}}" fill-opacity="{{fill-opacity}}" stroke="{{stroke}}" stroke-width="{{stroke-width}}" {{extra}} />
   </g>
 </svg>"#,
       path_data = builder.0
     );
-    Some(GlyphShape { svg })
+    Some(GlyphShape {
+      template: svg,
+      metrics: SvgMetrics {
+        x_origin,
+        y_origin,
+        width,
+        height,
+      },
+    })
   }
 }
 
 impl GlyphShape {
   pub(crate) fn from_character_styled(
     repr: &FontRepr,
-    styles: SvgPathStyles,
     ch: char,
   ) -> Option<Self> {
     let glyph = GlyphInfo::from_character(repr, ch)?;
-    GlyphShapeBuilder::new(styles).glyph_shape(repr, &glyph)
+    GlyphShape::shape(repr, &glyph)
   }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct GlyphShapes(Vec<Option<GlyphShape>>);
+pub(crate) struct GlyphsShapes(Vec<Option<GlyphShape>>);
 
-impl GlyphShapes {
-  pub(crate) fn from_option_iter_styled(
+impl GlyphsShapes {
+  pub(crate) fn from_option_iter(
     repr: &FontRepr,
-    styles: SvgPathStyles,
     codes: impl Iterator<Item = Option<char>>,
   ) -> Self {
-    let glyph_shapes = codes
-      .map(|code| GlyphShape::from_character_styled(repr, styles, code?));
-    GlyphShapes(glyph_shapes.collect())
+    let glyph_shapes =
+      codes.map(|code| GlyphShape::from_character_styled(repr, code?));
+    GlyphsShapes(glyph_shapes.collect())
   }
 }
