@@ -264,11 +264,11 @@ impl Display for MacintoshLanguage {
 }
 
 impl MacintoshLanguage {
-  /// Safety: we know that the index is valid in range
-  /// [0, 95) + [128, 151)
   pub fn from_index(index: u16) -> Option<Self> {
     match index {
       0..95 | 128..151 => {
+        // Safety: we know that the index is valid in range
+        // [0, 95) + [128, 151)
         Some(unsafe { std::mem::transmute::<u16, MacintoshLanguage>(index) })
       }
       _ => None,

@@ -44,3 +44,29 @@
   )
   cbor(melt.glyphes_infos(data, cbor.encode(index), cbor.encode(codepoints)))
 }
+
+// additionally, we require that scaling to be representable in f32
+#let svg-path-styles(scaling: 1.0) = {
+  assert(
+    (type(scaling) == int or type(scaling) == float),
+    message: "scaling must be numeric.",
+  )
+  (scaling: scaling * 1.0) // into float
+}
+
+#let glyphes-shapes(data, index, codepoints, styles: none) = {
+  assert(
+    type(index) == int and 0 <= index and index < 0xFFFFFFFF,
+    message: "index must be an integer between 0 and 2^32 - 1",
+  )
+  assert(
+    type(codepoints) == array and codepoints.all(_is-valid-unicode),
+    message: "codepoints must be an array of valid Unicode codepoints.",
+  )
+  cbor(melt.glyphes_shapes(
+    data,
+    cbor.encode(index),
+    cbor.encode(styles),
+    cbor.encode(codepoints),
+  ))
+}

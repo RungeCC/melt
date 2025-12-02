@@ -1,5 +1,5 @@
 mod repr;
-mod ttf;
+pub mod ttf;
 mod typst;
 
 use repr::FontRepr;
@@ -11,6 +11,8 @@ use ttf::metrics::FontMetrics;
 use ttf::names::FontNames;
 use ttf::scripts::FontScripts;
 use typst::TypstFontIntrospection;
+
+pub use ttf::glyphes::SvgPathStyles;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct FontProperties {
@@ -61,11 +63,12 @@ pub fn glyphes_infos(
   Some(GlyphInfos::from_option_iter(&repr, codes))
 }
 
-pub fn glyph_shapes_info(
+pub fn glyph_shapes(
   data: &[u8],
   index: u32,
+  styles: SvgPathStyles,
   codes: impl Iterator<Item = Option<char>>,
 ) -> Option<GlyphShapes> {
   let repr = FontRepr::new(data, index)?;
-  Some(GlyphShapes::from_option_iter(&repr, codes))
+  Some(GlyphShapes::from_option_iter_styled(&repr, styles, codes))
 }

@@ -126,6 +126,7 @@ pub(super) enum MacintoshEncoding {
 impl MacintoshEncoding {
   fn from_index(index: u16) -> Self {
     match index {
+      // Safety: we know that the index is valid in range [0, 33)
       valid @ 0..33 => unsafe {
         std::mem::transmute::<u16, MacintoshEncoding>(valid)
       },

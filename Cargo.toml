@@ -26,4 +26,5 @@ panic = "abort"
 [lints.clippy]
 enum_glob_use = "deny"
 unsafe_derive_deserialize = "allow"
+undocumented_unsafe_blocks = "deny"
 pedantic = { level = "warn", priority = -1 }

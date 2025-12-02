@@ -1,5 +1,4 @@
 use crate::melt::repr::FontRepr;
-use crate::melt::ttf::metrics::FontMetrics;
 use serde::{Deserialize, Serialize};
 use std::fmt::Write;
 use std::string::ToString;
@@ -151,11 +150,6 @@ impl GlyphInfos {
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct GlyphShape {
-  svg: String,
-}
-
 struct SvgPen(String);
 
 impl SvgPen {
@@ -189,39 +183,81 @@ impl OutlineBuilder for SvgPen {
   }
 }
 
-impl GlyphShape {
-  fn from_glyph(repr: &FontRepr, glyph: &GlyphInfo) -> Option<Self> {
+#[derive(Debug, Clone, Serialize, Deserialize, Copy)]
+pub struct SvgPathStyles {
+  scaling: f32,
+}
+
+impl Default for SvgPathStyles {
+  fn default() -> Self {
+    Self { scaling: 1.0 }
+  }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub(crate) struct GlyphShapeBuilder {
+  style: SvgPathStyles,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct GlyphShape {
+  // Current only SVG.
+  svg: String,
+}
+
+impl GlyphShapeBuilder {
+  #[allow(dead_code)]
+  fn new(style: SvgPathStyles) -> Self {
+    Self { style }
+  }
+
+  #[allow(dead_code)]
+  fn with_style(mut self, style: SvgPathStyles) -> Self {
+    self.style = style;
+    self
+  }
+}
+
+impl GlyphShapeBuilder {
+  fn glyph_shape(
+    &self,
+    repr: &FontRepr,
+    glyph: &GlyphInfo,
+  ) -> Option<GlyphShape> {
     let mut builder = SvgPen::new();
-    let metrics = FontMetrics::from_repr(repr);
+    // px -> pt conversion, 1pt = 1.33px, then apply additional scaling
+    let scale = 1. / 0.75 * self.style.scaling;
     let ttf = &repr.ttf_parser;
     let glyph_id = glyph.id();
-    let ascender = metrics.ascender;
-    let descender = metrics.descender;
-    let height = ascender - descender;
-    #[allow(unused_variables)]
-    let width = glyph.horizontal_advance.unwrap_or(1000);
-    #[allow(unused_variables)]
-    let side_bearing = glyph.horizontal_side_bearing.unwrap_or(0);
-    #[allow(unused_variables)]
     let bbox = ttf.outline_glyph(glyph_id, &mut builder)?;
+    let width = glyph.vertical_advance.map_or(
+      f32::from(bbox.width())
+        + 2.0 * f32::from(glyph.horizontal_side_bearing.unwrap_or(0)),
+      |e| f32::from(e) * scale,
+    ) * scale;
+    let height = f32::from(bbox.height()) * scale;
+    let y_origin = f32::from(-bbox.y_max) * scale;
     #[rustfmt::skip]
     let svg = format!(
-r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}">
-  <g transform="matrix(1 0 0 -1 0 {ascender})">
+r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 {y_origin} {width} {height}">
+  <g transform="scale({scale}, -{scale})">
     <path d="{path_data}" fill="black" />
   </g>
 </svg>"#,
-      width = bbox.width() + 2 * side_bearing,
-      height = height,
-      ascender = ascender,
       path_data = builder.0
     );
     Some(GlyphShape { svg })
   }
+}
 
-  pub(crate) fn from_character(repr: &FontRepr, ch: char) -> Option<Self> {
+impl GlyphShape {
+  pub(crate) fn from_character_styled(
+    repr: &FontRepr,
+    styles: SvgPathStyles,
+    ch: char,
+  ) -> Option<Self> {
     let glyph = GlyphInfo::from_character(repr, ch)?;
-    GlyphShape::from_glyph(repr, &glyph)
+    GlyphShapeBuilder::new(styles).glyph_shape(repr, &glyph)
   }
 }
 
@@ -229,12 +265,13 @@ r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}">
 pub(crate) struct GlyphShapes(Vec<Option<GlyphShape>>);
 
 impl GlyphShapes {
-  pub(crate) fn from_option_iter(
+  pub(crate) fn from_option_iter_styled(
     repr: &FontRepr,
+    styles: SvgPathStyles,
     codes: impl Iterator<Item = Option<char>>,
   ) -> Self {
-    let glyph_shapes =
-      codes.map(|code| GlyphShape::from_character(repr, code?));
+    let glyph_shapes = codes
+      .map(|code| GlyphShape::from_character_styled(repr, styles, code?));
     GlyphShapes(glyph_shapes.collect())
   }
 }
